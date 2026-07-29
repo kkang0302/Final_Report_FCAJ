@@ -9,11 +9,11 @@ chapter: false
 # Internship Report
 
 ### Student Information:
-&emsp; **Full Name:** Phan Quốc Hữu
+&emsp; **Full Name:** Phan Đình Khang
 
-&emsp; **Phone Number:** 0362690144 
+&emsp; **Phone Number:** 0896409070
 
-&emsp; **Email:** huu.phanquoc@hcmut.edu.vn
+&emsp; **Email:** khang.phan0302@hcmut.edu.vn
 
 &emsp; **University:** Ho Chi Minh City University of Technology
 
@@ -25,7 +25,7 @@ chapter: false
 
 &emsp; **Internship Position:** Fullstack Developer - First Cloud AI Journey
 
-&emsp; **Internship Duration:** From 15/06/2026 to 04/09/2026
+&emsp; **Internship Duration:** From 15/06/2026 to 31/7/2026
 
 ![Your profile picture](/images/avatar.jpg)
 

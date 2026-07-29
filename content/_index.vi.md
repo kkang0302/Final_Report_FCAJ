@@ -11,17 +11,17 @@ chapter: false
 
 &emsp; **Số điện thoại:** 0896409070
 
-&emsp; **Email:** huu.phanquoc@hcmut.edu.vn
+&emsp; **Email:** khang.phan0302@hcmut.edu.vn
 
 &emsp; **Trường:** Đại học Bách khoa TP.HCM
 
 &emsp; **Ngành:** Khoa học máy tính
 
-&emsp; **Lớp:** AWS082025
+<!-- &emsp; **Lớp:** AWS082025 -->
 
 &emsp; **Công ty thực tập:** Công ty TNHH Amazon Web Services Viet Nam
 
-&emsp; **Vị trí thực tập:** Workforce Bootcamp - First Cloud AI Journey
+&emsp; **Vị trí thực tập:** Fullstack Developer - First Cloud AI Journey
 
 &emsp; **Thời gian thực tập:** Từ ngày 15/06/2026 đến ngày 31/7/2026
 
