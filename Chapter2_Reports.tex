@@ -1,0 +1,161 @@
+\section{QUÁ TRÌNH THỰC TẬP}
+
+Trong thời gian thực tập tại \textbf{Amazon Web Services (AWS)} từ ngày 15/06/2026 đến 14/08/2026 (08 tuần), toàn bộ quá trình thực tập được triển khai gắn với \textbf{Đề tài 3: Xây dựng và phát triển ứng dụng Web trên nền tảng Cloud AWS}. Nội dung thực tập tập trung vào việc thiết kế, xây dựng và triển khai dự án \textbf{CourShare} - một nền tảng chia sẻ khóa học trực tuyến theo kiến trúc Microservices, sử dụng hạ tầng điện toán đám mây AWS được quản lý dưới dạng mã nguồn (Infrastructure as Code - IaC) thông qua Terraform.
+
+Dưới đây là chi tiết các công việc và kết quả đạt được qua từng tuần trong lộ trình thực tập:
+
+\subsection{Tuần 1: Nghiên cứu kiến trúc Microservices và thiết kế hệ thống CourShare trên AWS}
+
+Trong tuần đầu tiên, mục tiêu chính là nghiên cứu mô hình phát triển ứng dụng Cloud-native và thiết kế kiến trúc hệ thống tổng quan cho dự án CourShare. Đồng thời, các dịch vụ cốt lõi của AWS được phân tích nhằm xác định vai trò của từng thành phần trong sơ đồ vận hành.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Tìm hiểu và so sánh kiến trúc Monolithic truyền thống với kiến trúc Microservices chạy trên môi trường Cloud, tập trung vào khả năng mở rộng độc lập, tính sẵn sàng cao và khả năng cô lập lỗi.
+    \item Thiết kế kiến trúc tổng thể cho hệ thống CourShare gồm 5 dịch vụ thành phần:
+    \begin{itemize}
+        \item \textbf{Identity Service} (Cổng 8081): Quản lý tài khoản, phân quyền và xác thực người dùng.
+        \item \textbf{Course Service} (Cổng 8082): Quản lý danh mục, khóa học, chương học và bài học.
+        \item \textbf{Payment Service} (Cổng 8083): Tích hợp cổng thanh toán trực tuyến.
+        \item \textbf{Enrollment Service} (Cổng 8084): Quản lý thông tin ghi danh và quyền truy cập khóa học của học viên.
+        \item \textbf{Learning Service} (Cổng 8085): Theo dõi tiến trình học tập, hoàn thành bài học của học viên.
+    \end{itemize}
+    \item Thiết kế luồng đi của dữ liệu qua API Gateway làm ngõ vào duy nhất (Single Entry Point), đi qua cơ chế phân quyền tập trung tại Lambda Authorizer, trước khi chuyển tiếp yêu cầu đến mạng riêng (Private Subnets) thông qua Internal Application Load Balancer (ALB).
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Hoàn thành bản vẽ kiến trúc hệ thống tổng thể và sơ đồ thực thể liên kết (ERD) ban đầu cho các microservices, định hình rõ vai trò của từng dịch vụ đám mây sẽ sử dụng.
+
+\subsection{Tuần 2: Thiết kế Database và phát triển các dịch vụ cốt lõi (Identity \& Course Services)}
+
+Tuần thứ hai tập trung vào việc thiết lập hệ thống cơ sở dữ liệu đồng nhất và phát triển hai dịch vụ nền tảng của hệ thống bằng Java Spring Boot.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Thiết kế cấu trúc các bảng dữ liệu cho Identity Service và Course Service. Sử dụng công cụ \textbf{Prisma ORM} để định nghĩa schema cơ sở dữ liệu và quản lý các phiên bản cập nhật cấu trúc database (migrations) một cách nhất quán.
+    \item Phát triển \textbf{Identity Service} (Java Spring Boot, JPA/Hibernate):
+    \begin{itemize}
+        \item Xây dựng các chức năng: Đăng ký tài khoản (mặc định quyền \texttt{STUDENT}), Đăng nhập cấp phát Access Token (15 phút) và Refresh Token (7 ngày), Đăng xuất (thu hồi token thông qua blacklist trong Redis), Đổi mật khẩu và cập nhật thông tin cá nhân.
+        \item Tích hợp Spring Security và triển khai cơ chế băm mật khẩu bằng thuật toán \texttt{BCrypt}. Khởi tạo tự động dữ liệu vai trò (\texttt{STUDENT}, \texttt{INSTRUCTOR}, \texttt{ADMIN}) khi dịch vụ khởi chạy.
+    \end{itemize}
+    \item Phát triển \textbf{Course Service} (Java Spring Boot, JPA/Hibernate): Xây dựng hệ thống REST API cho phép quản lý toàn bộ vòng đời của khóa học bao gồm: Danh mục khóa học, thông tin khóa học, các chương học (sections) và các bài học (lessons).
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Hoàn thành các tính năng cơ bản của Identity và Course Service, kiểm thử cục bộ thành công các API xác thực và quản lý khóa học dưới máy cá nhân.
+
+\subsection{Tuần 3: Phát triển các dịch vụ Node.js và tích hợp cổng thanh toán Stripe}
+
+Tuần thứ ba tập trung vào việc xây dựng ba dịch vụ còn lại sử dụng nền tảng Node.js/TypeScript và tích hợp cổng thanh toán bên thứ ba Stripe.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Phát triển \textbf{Payment Service} (Node.js/Express, Prisma ORM):
+    \begin{itemize}
+        \item Tích hợp Stripe SDK để tạo các Checkout Session phục vụ cho học viên thanh toán trực tuyến mua khóa học.
+        \item Thiết lập REST API endpoint lắng nghe sự kiện từ Stripe Webhook (như \texttt{checkout.session.completed}) để cập nhật trạng thái thanh toán tự động và lưu lịch sử giao dịch (\texttt{transactions}).
+    \end{itemize}
+    \item Phát triển \textbf{Enrollment Service} (Node.js/Express, Prisma ORM): Xây dựng API kiểm tra trạng thái ghi danh khóa học của học viên và ghi nhận lượt ghi danh mới sau khi Payment Service xác nhận giao dịch thành công.
+    \item Phát triển \textbf{Learning Service} (Node.js/Express, Prisma ORM): Xây dựng cơ chế theo dõi tiến trình học tập của học viên, đánh dấu bài học đã hoàn thành và tính toán phần trăm tiến độ tổng quan của khóa học.
+    \item Viết và chạy các Unit Test bằng framework Jest để kiểm tra tính ổn định của các dịch vụ Node.js trước khi đóng gói thành Docker Image.
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Hoàn thiện mã nguồn của 5 microservices, các dịch vụ sẵn sàng giao tiếp nội bộ và tích hợp thành công với cổng thanh toán Stripe giả lập (Stripe CLI).
+
+\subsection{Tuần 4: Xây dựng cơ sở hạ tầng dưới dạng mã (IaC) với Terraform}
+
+Mục tiêu của tuần thứ tư là thiết kế và triển khai toàn bộ hạ tầng mạng, bảo mật và cơ sở dữ liệu trên AWS một cách tự động thông qua Terraform.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Viết các tệp cấu hình Terraform (\texttt{main.tf}) định nghĩa mạng \textbf{Virtual Private Cloud (VPC)} với dải IP \texttt{10.0.0.0/16}.
+    \item Thiết lập cấu trúc mạng an toàn gồm 3 phân vùng (Subnets) phân bổ trên 2 Availability Zones (\texttt{ap-southeast-1a} và \texttt{ap-southeast-1b}) để đảm bảo tính sẵn sàng cao:
+    \begin{itemize}
+        \item \textbf{Public Subnets}: Dành cho API Gateway VPC Link, NAT Instance và Internet Gateway.
+        \item \textbf{Private Subnets}: Dành cho các container của microservices chạy trên Amazon ECS và Internal Application Load Balancer.
+        \item \textbf{Database Subnets}: Phân vùng biệt lập cao nhất chỉ dành riêng cho cơ sở dữ liệu.
+    \end{itemize}
+    \item Thiết lập một \textbf{EC2 NAT Instance} (t3.micro, chạy Amazon Linux 2023) đặt tại Public Subnet thay thế cho AWS NAT Gateway để tối ưu hóa chi phí vận hành. Cấu hình dịch vụ bằng \texttt{user_data} kích hoạt chuyển tiếp gói tin (\texttt{net.ipv4.ip_forward=1}) và thiết lập luật \texttt{iptables} NAT masquerade.
+    \item Khởi tạo dịch vụ cơ sở dữ liệu chia sẻ \textbf{Amazon RDS PostgreSQL} (\texttt{db.t4g.micro} - dòng chip Graviton2 tiết kiệm năng lượng) nằm hoàn toàn trong phân vùng Database private. Thiết lập Security Group chỉ cho phép kết nối cổng \texttt{5432} từ các tác vụ ECS (ECS Tasks) và từ NAT Instance (đóng vai trò như một Bastion Host phục vụ quản trị).
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Hạ tầng mạng và cơ sở dữ liệu được khởi tạo thành công trên AWS khu vực Singapore thông qua lệnh \texttt{terraform apply}, đảm bảo tính bảo mật và độc lập cao.
+
+\subsection{Tuần 5: Triển khai API Gateway, VPC Link và Lambda Authorizer}
+
+Tuần thứ năm tập trung vào việc cấu hình hệ thống Gateway định tuyến tập trung và triển khai cơ chế xác thực người dùng thống nhất trên AWS.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Triển khai \textbf{AWS Lambda Custom Authorizer} sử dụng Node.js để kiểm tra tính hợp lệ của chữ ký số JWT được gửi kèm từ Header \texttt{Authorization} của client. Khi token hợp lệ, Lambda sẽ giải mã và trích xuất thông tin người dùng (như ID, Email, danh sách Roles) để inject vào đối tượng context của API Gateway.
+    \item Cấu hình \textbf{HTTP API Gateway} của AWS làm điểm tiếp nhận duy nhất cho toàn bộ request từ Client. Thiết lập chính sách CORS cho phép kết nối an toàn từ môi trường cục bộ (\texttt{localhost}) và CloudFront.
+    \item Thiết lập \textbf{VPC Link} liên kết HTTP API Gateway với một bộ cân bằng tải nội bộ \textbf{Internal Application Load Balancer (ALB)} nằm trong Private Subnets.
+    \item Cấu hình tính năng Parameter Mapping tại API Gateway để chuyển tiếp các thông tin định danh từ Lambda Authorizer thành các HTTP Headers tùy chỉnh (\texttt{X-User-Id}, \texttt{X-User-Email}, \texttt{X-User-Roles}) chuyển tiếp xuống các microservices phía sau.
+    \item Thiết lập các quy tắc định tuyến (Listener Rules) trên ALB để định hướng traffic dựa trên đường dẫn tương ứng:
+    \begin{itemize}
+        \item \texttt{/auth*}, \texttt{/profile*} $\rightarrow$ Target Group của Identity Service (cổng 8081).
+        \item \texttt{/courses*}, \texttt{/categories*} $\rightarrow$ Target Group của Course Service (cổng 8082).
+        \item \texttt{/checkout*}, \texttt{/webhook*}, \texttt{/transactions*} $\rightarrow$ Target Group của Payment Service (cổng 8083).
+        \item \texttt{/enrollments*} $\rightarrow$ Target Group của Enrollment Service (cổng 8084).
+        \item \texttt{/progress*}, \texttt{/learning*}, \texttt{/lessons*} $\rightarrow$ Target Group của Learning Service (cổng 8085).
+    \end{itemize}
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Toàn bộ luồng định tuyến và bảo mật tập trung qua API Gateway và Custom Lambda Authorizer hoạt động trơn tru, bảo vệ an toàn cho các microservices nằm trong mạng private.
+
+\subsection{Tuần 6: Tích hợp hệ thống lưu trữ S3, hàng đợi SQS và xử lý Media bất đồng bộ}
+
+Tuần thứ sáu tập trung vào việc quản lý lưu trữ tài nguyên tĩnh và xây dựng quy trình xử lý luồng video bất đồng bộ phục vụ cho bài học.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Khởi tạo các phân vùng lưu trữ \textbf{Amazon S3 Buckets}:
+    \begin{itemize}
+        \item \texttt{courshare-frontend-web-bucket} để lưu trữ và phân phối mã nguồn frontend tĩnh.
+        \item \texttt{courshare-media-hls-bucket} để giảng viên tải lên các tệp tin bài giảng video gốc ở định dạng \texttt{.mp4}.
+    \end{itemize}
+    \item Cấu hình tính năng \textbf{S3 Event Notification}: Thiết lập luật tự động gửi thông báo đến hàng đợi \textbf{Amazon SQS} (\texttt{courshare-video-processing-queue}) bất cứ khi nào có tệp tin có đuôi \texttt{.mp4} được tạo mới trong thư mục bài giảng trên S3.
+    \item Cấu hình chính sách bảo mật cho hàng đợi (SQS Queue Policy) cho phép dịch vụ S3 gửi tin nhắn (action \texttt{sqs:SendMessage}) đi kèm điều kiện ràng buộc ARN nguồn trùng khớp với ARN của S3 Media bucket.
+    \item Xây dựng module worker bất đồng bộ phục vụ việc đọc tin nhắn từ SQS, chuẩn bị cho quá trình chuyển đổi định dạng video (transcoding) sang chuẩn HLS phục vụ xem video trực tuyến mượt mà.
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Tích hợp thành công luồng xử lý phương tiện bất đồng bộ qua mô hình Event-driven giữa S3 và SQS, giảm thiểu tải xử lý trực tiếp cho backend chính.
+
+\subsection{Tuần 7: Kiểm thử tích hợp toàn diện hệ thống và tối ưu hóa hiệu năng}
+
+Tuần thứ bảy dành cho việc kiểm thử tích hợp (Integration Testing) toàn bộ hệ thống từ đầu cuối (End-to-End) và thực hiện các biện pháp tối ưu hóa hiệu năng.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Triển khai kịch bản kiểm thử toàn diện quy trình nghiệp vụ chính của học viên: Đăng ký tài khoản $\rightarrow$ Đăng nhập lấy JWT $\rightarrow$ Xem danh sách khóa học $\rightarrow$ Chọn mua khóa học $\rightarrow$ Thanh toán qua Stripe $\rightarrow$ Tự động ghi danh khóa học $\rightarrow$ Học bài giảng và đánh dấu hoàn thành bài giảng để cập nhật tiến trình học tập.
+    \item Kiểm thử các kịch bản kiểm soát truy cập (Access Control) để đảm bảo Lambda Authorizer hoạt động chính xác trong việc từ chối các request thiếu hoặc sai token JWT, đồng thời kiểm tra tính hợp lệ của phân quyền người dùng (như học viên không được phép tạo hay sửa khóa học).
+    \item Tối ưu hóa cơ sở dữ liệu:
+    \begin{itemize}
+        \item Tạo các chỉ mục (indexes) trên cơ sở dữ liệu PostgreSQL cho các trường thường xuyên tìm kiếm hoặc lọc (như \texttt{email} trong bảng users, \texttt{course_id} trong bảng lessons).
+        \item Kiểm tra các truy vấn SQL do Prisma ORM và Spring Data JPA tự động sinh ra để tránh lỗi truy vấn $N+1$.
+        \item Cấu hình Connection Pool cho các microservices kết nối tới RDS nhằm kiểm soát số lượng kết nối đồng thời và giảm thiểu overhead kết nối.
+    \end{itemize}
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Hệ thống vận hành ổn định trên môi trường kiểm thử, xử lý tốt các luồng nghiệp vụ liên thông giữa các microservices, cải thiện đáng kể thời gian phản hồi API.
+
+\subsection{Tuần 8: Cấu hình Giám sát (CloudWatch), Hoàn thiện hệ thống và Tổng kết báo cáo}
+
+Tuần cuối cùng tập trung vào việc thiết lập cơ chế giám sát vận hành của hệ thống trên môi trường AWS, đóng gói tài liệu kỹ thuật và viết báo cáo tổng kết thực tập.
+
+\textbf{Công việc thực hiện:}
+\begin{itemize}
+    \item Tích hợp cơ chế ghi log tập trung thông qua \textbf{Amazon CloudWatch Logs}:
+    \begin{itemize}
+        \item Thu thập toàn bộ log hệ thống sinh ra từ các ECS tasks chạy microservices.
+        \item Thu thập log thực thi của Lambda Authorizer phục vụ giám sát lượng request xác thực lỗi hoặc bị tấn công brute-force.
+        \item Giám sát tài nguyên phần cứng (CPU, Memory) của RDS PostgreSQL instance và NAT Instance để thiết lập các cảnh báo tự động khi sử dụng vượt ngưỡng an toàn.
+    \end{itemize}
+    \item Tổng hợp mã nguồn dự án, làm sạch cấu hình môi trường chạy cục bộ thông qua Docker Compose và hoàn thiện mã nguồn Terraform (\texttt{terraform.zip}) phục vụ bàn giao hạ tầng.
+    \item Hoàn thiện báo cáo thực tập, viết chi tiết chương 2 giới thiệu quy trình làm việc, thiết lập hệ thống sơ đồ hạ tầng thực tế triển khai và chuẩn bị slide thuyết trình chạy demo sản phẩm.
+\end{itemize}
+
+\textbf{Kết quả đạt được:} Hệ thống có đầy đủ cơ chế logging và monitoring tập trung, báo cáo thực tập được hoàn thiện với nội dung kỹ thuật chi tiết phản ánh đúng tiến trình xây dựng dự án CourShare.
+
+\subsection*{Tóm lại}
+
+Trong 08 tuần thực tập tại Công ty AWS Việt Nam gắn liền với dự án CourShare, một lộ trình phát triển và vận hành phần mềm theo hướng Cloud-native đã được triển khai một cách bài bản. Từ việc nghiên cứu kiến trúc microservices phân rã nghiệp vụ, thiết kế cơ sở dữ liệu bằng Prisma ORM, phát triển backend với Java Spring Boot và Node.js/Express, tích hợp thanh toán Stripe, cho đến tự động hóa hạ tầng (VPC, Subnets, RDS, Custom NAT Instance) bằng Terraform, thiết lập bảo mật tập trung qua API Gateway và Custom Lambda Authorizer, xử lý video bất đồng bộ với S3 và SQS, và cuối cùng là giám sát với CloudWatch. 
+
+Đợt thực tập này đã giúp củng cố toàn diện kiến thức lý thuyết về điện toán đám mây và phát triển phần mềm, tích lũy các kinh nghiệm thực tế quý báu về thiết kế hệ thống phân tán, bảo mật mạng riêng, tối ưu hóa tài nguyên chi phí đám mây và các kỹ năng giải quyết sự cố phát sinh trong quá trình vận hành hạ tầng AWS thực tế. Đây là nền tảng kỹ năng vô cùng quan trọng cho việc định hình và phát triển chuyên môn trong các lĩnh vực Phần mềm và Kỹ thuật đám mây (Cloud Engineering) sau này.

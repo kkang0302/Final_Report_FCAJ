@@ -1,0 +1,39 @@
+---
+title: "Báo cáo thực tập"
+date: 2026-06-15
+weight: 1
+chapter: false
+---
+
+# Báo cáo thực tập
+### Thông tin sinh viên:
+&emsp; **Họ và tên:** Phan Đình Khang
+
+&emsp; **Số điện thoại:** 0896409070
+
+&emsp; **Email:** huu.phanquoc@hcmut.edu.vn
+
+&emsp; **Trường:** Đại học Bách khoa TP.HCM
+
+&emsp; **Ngành:** Khoa học máy tính
+
+&emsp; **Lớp:** AWS082025
+
+&emsp; **Công ty thực tập:** Công ty TNHH Amazon Web Services Viet Nam
+
+&emsp; **Vị trí thực tập:** Workforce Bootcamp - First Cloud AI Journey
+
+&emsp; **Thời gian thực tập:** Từ ngày 15/06/2026 đến ngày 31/7/2026
+
+![Ảnh đại diện của bạn](/images/avatar.png)
+
+
+
+### Nội dung báo cáo
+
+1.  [Worklog](1-Worklog/)
+2.  [Proposal](2-Proposal/)
+4.  [Các events đã tham gia](4-EventParticipated/)
+5.  [Workshop](5-Workshop/)
+6.  [Tự đánh giá](6-Self-evaluation/)
+7.  [Chia sẻ, đóng góp ý kiến](7-Feedback/)
