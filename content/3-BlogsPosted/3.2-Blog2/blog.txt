@@ -1,0 +1,158 @@
+# Monolith hay Microservices: kiến trúc nào phù hợp cho một project cá nhân?
+
+Khi bắt đầu một project mới, mình từng có xu hướng nghĩ rằng kiến trúc càng nhiều service thì hệ thống càng “chuyên nghiệp”. Một backend được chia thành Identity Service, Payment Service, Notification Service, API Gateway, Message Queue và nhiều database riêng nhìn trên sơ đồ rõ ràng hấp dẫn hơn một ứng dụng chỉ có duy nhất một backend.
+
+Microservices cũng xuất hiện rất nhiều trong các bài viết về system design, cloud-native và kiến trúc của những công ty công nghệ lớn. Vì vậy, lựa chọn kiến trúc này cho project cá nhân có vẻ là một cách hợp lý để học những công nghệ đang được sử dụng trong thực tế.
+
+Nhưng sau khi tìm hiểu sâu hơn về quá trình xây dựng và vận hành một hệ thống phân tán, mình bắt đầu tự hỏi:
+
+> “Nếu mục tiêu là hoàn thành một sản phẩm hoạt động tốt, liệu Microservices có thực sự là điểm khởi đầu phù hợp?”
+
+Câu trả lời ngắn của mình là: **chưa chắc**.
+
+Không phải vì Microservices là một kiến trúc không tốt, mà vì phần lớn lợi ích của nó chỉ thực sự có ý nghĩa khi hệ thống đã đạt đến một quy mô nhất định. Trong khi đó, những chi phí và độ phức tạp đi kèm lại xuất hiện gần như ngay từ ngày đầu tiên.
+
+## Microservices giải quyết những vấn đề có thật
+
+Microservices không xuất hiện chỉ vì các lập trình viên muốn chia nhỏ source code. Kiến trúc này được sử dụng để giải quyết những vấn đề rất cụ thể của hệ thống lớn.
+
+Khi một sản phẩm có nhiều nhóm phát triển, mỗi nhóm có thể sở hữu một service và triển khai theo chu kỳ riêng. Khi một chức năng nhận lượng traffic lớn hơn phần còn lại, service đó có thể được scale độc lập. Khi một thành phần gặp sự cố, phạm vi ảnh hưởng có thể được giới hạn thay vì làm toàn bộ hệ thống dừng hoạt động.
+
+Đó đều là những lợi ích quan trọng.
+
+Nhưng nếu project chỉ có một đến vài người phát triển, lượng người dùng chưa đáng kể và các chức năng vẫn còn thay đổi liên tục, phần lớn vấn đề mà Microservices giải quyết có thể chưa thực sự tồn tại.
+
+Ở thời điểm đó, việc chia hệ thống thành nhiều service đôi khi không làm giảm độ phức tạp. Nó chỉ chuyển độ phức tạp từ bên trong source code sang hạ tầng và quá trình vận hành.
+
+## Chi phí thật sự bắt đầu sau khi tách service
+
+Giả sử một hệ thống ban đầu có các domain như người dùng, khóa học, thanh toán và thông báo. Khi đặt tất cả trong một ứng dụng, các module có thể gọi trực tiếp lẫn nhau và cùng tham gia một transaction trong database.
+
+Khi tách chúng thành các microservice, những lời gọi hàm nội bộ trở thành request qua mạng.
+
+Từ đó, hàng loạt câu hỏi mới xuất hiện:
+
+* Service này tìm địa chỉ của service kia bằng cách nào?
+* Nếu request bị timeout thì nên retry bao nhiêu lần?
+* Nếu một service xử lý thành công nhưng service tiếp theo thất bại thì dữ liệu được khôi phục ra sao?
+* Làm thế nào để theo dõi một request đi qua nhiều service?
+* Làm sao xác thực và phân quyền các lời gọi nội bộ?
+* Nếu một event được gửi trùng hai lần thì hệ thống có xử lý an toàn không?
+* Khi API của một service thay đổi, các service phụ thuộc vào nó được cập nhật thế nào?
+
+Đây không còn là những vấn đề thuần túy về cách tổ chức source code. Chúng là các bài toán của distributed system: network failure, eventual consistency, idempotency, observability và fault tolerance.
+
+Trong một Monolith, lỗi thường nằm trong một process và có thể được lần theo bằng một luồng log. Trong Microservices, một request có thể đi qua API Gateway, Load Balancer, nhiều container, message queue và database trước khi trả về kết quả.
+
+Việc debug vì thế cũng thay đổi hoàn toàn.
+
+## Hạ tầng tăng lên, nhưng tính năng chưa chắc tăng theo
+
+Một hệ thống Monolith nhỏ có thể chỉ cần:
+
+* Một ứng dụng backend
+* Một database
+* Một pipeline CI/CD
+* Một môi trường triển khai
+* Một nơi tập trung log
+
+Sau khi chuyển sang Microservices, mỗi service có thể cần Docker image, pipeline, cấu hình môi trường, health check, autoscaling policy và quyền IAM riêng.
+
+Hệ thống cũng có thể cần thêm API Gateway, service discovery, container registry, message broker, distributed tracing và hệ thống giám sát tập trung.
+
+Tất cả những thành phần này đều có giá trị về mặt kỹ thuật. Nhưng có một điều đáng chú ý: **chúng không trực tiếp tạo ra tính năng mới cho người dùng**.
+
+Người dùng không quan tâm backend có một service hay mười service. Họ quan tâm trang có tải nhanh không, dữ liệu có chính xác không, thanh toán có thành công không và hệ thống có ổn định không.
+
+Với project cá nhân, thời gian dành cho việc quản lý nhiều service cũng đồng nghĩa với ít thời gian hơn cho business logic, trải nghiệm người dùng, kiểm thử và hoàn thiện sản phẩm.
+
+## Modular Monolith: điểm bắt đầu cân bằng hơn
+
+Nếu làm một project mới với mục tiêu xây MVP hoặc portfolio, lựa chọn mình nghiêng về nhiều hơn là **Modular Monolith**.
+
+Hệ thống vẫn được triển khai dưới dạng một ứng dụng duy nhất, nhưng bên trong được chia thành các module theo domain rõ ràng, chẳng hạn:
+
+```text
+identity/
+course/
+enrollment/
+payment/
+notification/
+```
+
+Mỗi module sở hữu business logic, interface và phạm vi trách nhiệm riêng. Các module không nên truy cập tùy tiện vào implementation của nhau, mà giao tiếp qua những interface đã được xác định.
+
+Cách tổ chức này giữ lại phần quan trọng nhất của thiết kế phần mềm: **separation of concerns và domain boundaries**, nhưng chưa phải trả ngay chi phí của một hệ thống phân tán.
+
+Quá trình triển khai vẫn đơn giản vì chỉ có một ứng dụng. Việc test dễ hơn. Transaction giữa các module vẫn có thể được xử lý trực tiếp. Log vẫn nằm trong một luồng tập trung. Khi cần thay đổi một chức năng có liên quan đến nhiều domain, developer cũng không phải đồng bộ nhiều repository và nhiều phiên bản API.
+
+Quan trọng hơn, Modular Monolith không đồng nghĩa với việc từ bỏ Microservices mãi mãi.
+
+Nếu ranh giới module được thiết kế tốt, một module có thể được tách thành service độc lập khi xuất hiện nhu cầu thật. Ví dụ, Payment cần tiêu chuẩn bảo mật và chu kỳ triển khai riêng, Notification cần xử lý lượng lớn tác vụ bất đồng bộ, hoặc Media Processing cần scale CPU độc lập với phần còn lại.
+
+Khi đó, việc tách service là phản ứng trước một vấn đề đã được quan sát, thay vì dự đoán một vấn đề có thể không bao giờ xuất hiện.
+
+## Khi nào Microservices bắt đầu hợp lý?
+
+Theo góc nhìn của mình, Microservices đáng được cân nhắc khi hệ thống bắt đầu xuất hiện các dấu hiệu cụ thể.
+
+Thứ nhất, nhiều nhóm cần phát triển và triển khai độc lập. Nếu mọi thay đổi đều phải chờ một pipeline chung hoặc việc sửa một module thường xuyên ảnh hưởng đến các module khác, tách service có thể cải thiện quyền tự chủ của từng team.
+
+Thứ hai, các thành phần có nhu cầu scale rất khác nhau. Một hệ thống có thể có phần đọc dữ liệu nhận hàng nghìn request, trong khi phần quản trị chỉ được sử dụng vài lần mỗi ngày. Nếu tất cả nằm trong cùng một application, việc scale toàn bộ hệ thống có thể gây lãng phí.
+
+Thứ ba, một số domain có yêu cầu vận hành hoặc bảo mật đặc biệt. Payment, media processing hay analytics có thể cần công nghệ, tài nguyên và chính sách triển khai khác với phần backend thông thường.
+
+Thứ tư, Monolith đã trở thành trở ngại có thể đo lường được: thời gian build quá lâu, deployment có phạm vi ảnh hưởng quá lớn, codebase khó xác định ownership hoặc một lỗi nhỏ thường xuyên kéo theo toàn hệ thống.
+
+Điểm chung của những trường hợp này là Microservices được lựa chọn để giải quyết một vấn đề đang tồn tại.
+
+Không phải chỉ vì kiến trúc đó xuất hiện trong một system design diagram đẹp mắt.
+
+## Microservices vẫn rất đáng học
+
+Việc Monolith phù hợp hơn với nhiều project cá nhân không có nghĩa là sinh viên hoặc developer mới không nên xây Microservices.
+
+Nếu mục tiêu chính của project là học Cloud Engineering, DevOps hoặc Distributed Systems, Microservices lại tạo ra một môi trường thực hành rất tốt.
+
+Một hệ thống nhiều service buộc mình phải tiếp cận các vấn đề như:
+
+* Container orchestration
+* Service discovery
+* Load balancing
+* Message queue
+* Distributed tracing
+* Centralized logging
+* Retry và circuit breaker
+* CI/CD cho nhiều service
+* Quản lý secret và phân quyền
+* Autoscaling và monitoring
+
+Những kiến thức này khó có thể học đầy đủ nếu chỉ triển khai một ứng dụng nhỏ lên một máy chủ.
+
+Vì vậy, một kiến trúc có thể không tối ưu cho việc ra mắt sản phẩm nhưng vẫn rất phù hợp cho mục tiêu học tập. Quan trọng là cần phân biệt rõ hai mục tiêu đó ngay từ đầu.
+
+## Điều mình rút ra
+
+Điều thú vị nhất khi so sánh Monolith và Microservices không phải là tìm ra kiến trúc nào tốt hơn, mà là nhận ra rằng mỗi lựa chọn đều là một sự đánh đổi.
+
+Monolith đổi khả năng scale và triển khai độc lập để lấy sự đơn giản.
+
+Microservices đổi sự đơn giản để lấy khả năng phân chia ownership, cô lập lỗi và mở rộng từng thành phần.
+
+Modular Monolith nằm ở giữa: giữ hệ thống vận hành như một khối duy nhất, nhưng cố gắng xây dựng những ranh giới đủ tốt để có thể phát triển lâu dài hoặc tách ra khi cần.
+
+Việc chọn Monolith cho một project nhỏ không có nghĩa là thiết kế kém chuyên nghiệp. Ngược lại, tránh đưa vào hệ thống những thành phần chưa thực sự cần thiết cũng là một quyết định kiến trúc.
+
+Một kiến trúc tốt không phải là kiến trúc sử dụng nhiều công nghệ nhất, mà là kiến trúc phù hợp với đúng giai đoạn, đúng nguồn lực và đúng vấn đề cần giải quyết.
+
+Vì vậy, nếu bắt đầu một project mới, câu hỏi đầu tiên có lẽ không nên là:
+
+> “Nên dùng Monolith hay Microservices?”
+
+Mà nên là:
+
+> “Hệ thống hiện tại đang có vấn đề gì, và kiến trúc này giúp giải quyết vấn đề đó như thế nào?”
+
+Với một project cá nhân chưa có người dùng thật, chưa có nhiều team và chưa có nhu cầu scale rõ ràng, câu trả lời hợp lý thường vẫn là bắt đầu đơn giản.
+
+Sau đó, chỉ tách hệ thống khi mình biết chính xác vì sao cần phải tách.
