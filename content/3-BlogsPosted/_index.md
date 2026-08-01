@@ -13,3 +13,6 @@ This blog shares insights and self-evaluation of the CourShare system architectu
 
 ### [Blog 2 - Monolith or Microservices: Which Architecture is Suitable for a Personal Project?](3.2-Blog2/)
 This blog discusses the trade-offs between Monolith and Microservices architectures for a personal project, analyzing the distributed system challenges that arise after splitting services and introducing the Modular Monolith approach as a balanced starting point.
+
+### [Blog 3 - Large-scale Asynchronous Video Upload and Processing Solution with S3 Presigned URLs, SQS, and ECS Fargate](3.3-Blog3/)
+This blog details the asynchronous video processing pipeline architecture of CourShare, utilizing S3 Presigned URLs for direct uploads, S3 Event Notifications combined with SQS for load buffering, and ECS Fargate Worker tasks to transcode video to HLS format for streaming via CloudFront CDN.

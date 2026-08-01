@@ -1,0 +1,57 @@
+---
+title: "Blog 3"
+date: 2026-08-01
+weight: 3
+chapter: false
+pre: " <b> 3.3. </b> "
+---
+
+# Giải pháp tải và xử lý video bất đồng bộ quy mô lớn với S3 Presigned URL, SQS và ECS Fargate
+
+Khi xây dựng CourShare, một trong tính năng cốt lõi nhưng cũng đầy thách thức là quản lý và phát video bài giảng. Video học tập thường có dung lượng lớn. Nếu để người dùng tải trực tiếp lên các microservice (như Course Service), hệ thống sẽ nhanh chóng rơi vào tình trạng nghẽn băng thông, tràn bộ nhớ đệm (buffer overflow), hoặc làm gián đoạn các tính năng khác.
+
+Để giải quyết bài toán này, mình đã thiết kế và triển khai một pipeline xử lý video bất đồng bộ (Asynchronous Video Processing) tận dụng tối đa sức mạnh của các dịch vụ AWS. Trong bài viết này, mình sẽ chia sẻ chi tiết kiến trúc đó.
+
+![Kiến trúc luồng xử lý Video](/images/3-BlogPosted/7c712349-a07d-437e-b63f-976cb4acbd0d.jpg)
+
+### Thách thức khi xử lý Video trong mô hình Microservices
+
+Đối với các ứng dụng web thông thường, luồng tải tệp thường là:
+1. Client gửi file (POST multipart/form-data) lên Backend.
+2. Backend lưu tạm file vào disk hoặc bộ nhớ.
+3. Backend upload file đó lên S3.
+
+Luồng này hoạt động tốt với ảnh avatar hay tài liệu nhỏ. Nhưng với video bài giảng dài hàng chục phút (vài trăm MB đến hàng GB), backend sẽ bị nghẽn trong lúc nhận file và truyền file. Hơn thế nữa, phát video thô trực tiếp (ví dụ file .mp4) sẽ gây tốn băng thông và mang lại trải nghiệm tệ cho người dùng ở vùng có mạng yếu vì họ phải tải toàn bộ file để xem.
+
+---
+
+### Kiến trúc giải pháp: Tách biệt Upload và Xử lý
+
+Kiến trúc luồng xử lý video của CourShare bao gồm 3 giai đoạn chính:
+
+#### 1. Upload trực tiếp thông qua S3 Presigned URL (Direct Upload to S3)
+Để bảo vệ backend, CourShare cho phép client tải file trực tiếp lên Amazon S3 mà không cần đi qua Gateway hay Course Service.
+* Khi giảng viên bấm tải video lên, client gửi request đến Course Service để yêu cầu một *S3 Presigned URL*.
+* Course Service tạo ra một URL tạm thời có thời hạn ngắn (ví dụ: 15 phút) cùng các ràng buộc về kích thước và định dạng file, sau đó trả về cho client.
+* Client thực hiện request PUT trực tiếp từ trình duyệt lên S3 thông qua Presigned URL đó. Hạ tầng của S3 sẽ tự động xử lý việc upload dung lượng lớn một cách tối ưu.
+
+#### 2. Kích hoạt xử lý bất đồng bộ qua Amazon S3 Event Notifications & SQS
+Khi video gốc (raw video) đã được tải lên hoàn toàn vào S3 Media Bucket (trong thư mục /uploads):
+* Amazon S3 phát ra một event notification ObjectCreated:Put.
+* Event này được gửi trực tiếp đến một hàng đợi *Amazon SQS (Simple Queue Service)*.
+* Việc dùng SQS đóng vai trò làm bộ đệm giảm tải (load buffer), giúp hệ thống không bị quá tải khi có hàng chục giảng viên cùng lúc upload video.
+
+#### 3. Chuyển đổi định dạng (Transcoding) tự động với ECS Fargate Workers
+Một nhóm các task Worker chạy trên *Amazon ECS Fargate* sẽ liên tục lắng nghe (long-polling) từ hàng đợi SQS:
+* Khi nhận được thông điệp chứa thông tin file video mới, Worker tải video thô xuống từ S3.
+* Worker sử dụng thư viện FFmpeg để thực hiện transcode video sang chuẩn *HLS (HTTP Live Streaming)*. Video được cắt nhỏ thành các file phân đoạn .ts (mỗi file khoảng vài giây) kèm theo file danh mục .m3u8.
+* Output sau khi transcode được đẩy ngược lại lên S3 Media Bucket trong thư mục /processed.
+* Khi hoàn thành, Worker cập nhật trạng thái của bài giảng trong database của Course Service sang Ready và xóa thông điệp khỏi SQS.
+
+---
+
+### Tối ưu hóa trải nghiệm người dùng với Amazon CloudFront & OAC
+
+Để đảm bảo học viên có thể xem video bài giảng mượt mà, không bị gián đoạn và hạn chế tối đa độ trễ:
+* Toàn bộ video trong thư mục /processed được phân phối qua *Amazon CloudFront CDN*. CloudFront sẽ lưu cache các phân đoạn video tại các Edge Location gần người dùng nhất.
+* Để bảo vệ bản quyền video bài giảng (tránh việc người dùng chia sẻ trực tiếp link S3), Media Bucket được cấu hình private hoàn toàn. CloudFront truy cập S3 thông qua *Origin Access Control (OAC)* - cơ chế bảo mật mới nhất của AWS, đảm bảo không ai có thể xem video nếu không đi qua tên miền CDN được chỉ định.

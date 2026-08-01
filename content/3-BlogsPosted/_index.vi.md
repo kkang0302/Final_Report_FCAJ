@@ -13,3 +13,6 @@ Bài viết này chia sẻ góc nhìn và quá trình tự đánh giá kiến tr
 
 ### [Blog 2 - Monolith hay Microservices: kiến trúc nào phù hợp cho một project cá nhân?](3.2-Blog2/)
 Bài viết này bàn luận về sự đánh đổi giữa kiến trúc Monolith và Microservices đối với một dự án cá nhân, phân tích các bài toán hệ thống phân tán phát sinh sau khi chia nhỏ dịch vụ và giới thiệu hướng tiếp cận Modular Monolith như một điểm khởi đầu cân bằng.
+
+### [Blog 3 - Giải pháp tải và xử lý video bất đồng bộ quy mô lớn với S3 Presigned URL, SQS và ECS Fargate](3.3-Blog3/)
+Bài viết này giới thiệu chi tiết kiến trúc luồng xử lý video bất đồng bộ của hệ thống CourShare, sử dụng S3 Presigned URL để upload trực tiếp, S3 Event Notification kết hợp SQS để đệm tải, và cụm Worker trên ECS Fargate để transcode chuẩn HLS phục vụ stream qua CloudFront CDN.
