@@ -10,6 +10,8 @@ pre: " <b> 5. </b> "
 
 In this chapter, we will walk through the step-by-step practical implementation and deployment of the entire CourShare platform on AWS infrastructure. The sections are organized in a logical sequence, starting from core networking, container deployments, database provisioning, user security, media storage, async workers, CI/CD automation, monitoring, and resource cleanup.
 
+- **Video Demo:** [Demo CourShare](https://drive.google.com/file/d/1V1g4Y3r-NSrpFVWvp00a6wMZ1zm5PIpH/view?usp=sharing)
+
 #### Workshop Content
 
 1. [Architectural Introduction and System Overview](5.1-Workshop-overview/)

@@ -10,6 +10,8 @@ pre: " <b> 5. </b> "
 
 Trong chương này, chúng ta sẽ cùng thực hành từng bước thiết lập và triển khai toàn bộ hệ thống CourShare lên hạ tầng AWS. Các bước được sắp xếp theo thứ tự logic, từ thiết lập mạng nền tảng, tạo dựng các microservices, thiết lập cơ sở dữ liệu, phân quyền, lưu trữ, truyền thông điệp bất đồng bộ cho tới tự động hóa pipeline triển khai và dọn dẹp tài nguyên.
 
+- **Video Demo:** [Demo CourShare](https://drive.google.com/file/d/1V1g4Y3r-NSrpFVWvp00a6wMZ1zm5PIpH/view?usp=sharing)
+
 #### Nội dung bài thực hành
 
 1. [Giới thiệu tổng quan và Kiến trúc hệ thống](5.1-Workshop-overview/)
